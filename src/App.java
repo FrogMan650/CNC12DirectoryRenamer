@@ -1,0 +1,135 @@
+import java.io.File;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+public class App {
+    public static String directory = "cncm";
+    public static String fileDirectory;
+    public static String board;
+    public static String version;
+    public static String machine;
+    public static void main(String[] args) throws Exception {
+
+        //set board type
+        NodeList boardVersionNodeList;
+        String boardVersion;
+        String oldFilePath = "C:/" + directory + "/mpu_info.xml";
+        try {
+            boardVersionNodeList = getRootElement(getDocument(oldFilePath)).getElementsByTagName("PLCDeviceID");
+            boardVersion = boardVersionNodeList.item(0).getTextContent();
+            board = boardVersion.split("_")[2];
+        } catch (Exception e) {
+            System.out.println("Exception thrown while setting board type");
+            System.out.println(e);
+        }
+        
+        //set machine type
+        File cncmExe = new File("C:/" + directory + "/cncm.exe");
+        File cnctExe = new File("C:/" + directory + "/cnct.exe");
+        File cncrExe = new File("C:/" + directory + "/cncr.exe");
+        File cncpExe = new File("C:/" + directory + "/cncp.exe");
+        File cnclExe = new File("C:/" + directory + "/cncl.exe");
+        if (cncmExe.exists()) {
+            machine = "mill";
+        } else if (cnctExe.exists()) {
+            machine = "lathe";
+        } else if (cncrExe.exists()) {
+            machine = "router";
+        } else if (cncpExe.exists()) {
+            machine = "plasma";
+        } else if (cnclExe.exists()) {
+            machine = "laser";
+        }
+
+        //set file directory
+        if (directory.equals("cnct")) {
+            fileDirectory = "cnct";
+        } else {
+            fileDirectory = "cncm";
+        }
+        
+        //set CNC12 version
+        version = setRawVersion("C:/" + directory + "/" + fileDirectory + ".prm.xml");
+
+        // Path sourcePath = Paths.get("C:/" + directory);
+        // Path destinationPath = Paths.get("C:/renamed_" + directory);
+        // try {
+        //     Files.move(sourcePath, destinationPath);
+        //     System.out.println("renamed");
+        // } catch (Exception e) {
+        //     System.out.println("exception thrown while renaming " + directory);
+        //     System.out.println(e);
+        // }
+        if (directory == null || version == null || board == null || machine == null) {
+            throw new IllegalArgumentException("something was null");
+        }
+        System.out.println(directory + "_" + version + "_" + board + "_" + machine);
+    }
+
+    public static Document getDocument(String filePath) {
+        DocumentBuilderFactory factory;
+        DocumentBuilder builder;
+        Document document = null;
+        try {
+            factory = DocumentBuilderFactory.newInstance();
+            builder = factory.newDocumentBuilder();
+            document = builder.parse(new File(filePath));
+        } catch (Exception e) {
+            System.out.println("Exception thrown while getting document from: " + filePath);
+            System.out.println(e);
+        }
+        return document;
+    }
+
+    public static Element getRootElement(Document document) {
+        Element rootElement = null;
+        try {
+            rootElement = document.getDocumentElement();
+        } catch (Exception e) {
+            System.out.println("Exception thrown while getting root element from document");
+            System.out.println(e);
+        }
+            return trimEmptyElements(rootElement);
+    }
+
+    public static Element trimEmptyElements(Element node) {
+        for (int i = node.getChildNodes().getLength()-1; i >= 0; i--) {
+            if (node.getChildNodes().item(i).getTextContent().trim().isEmpty() && !node.getChildNodes().item(i).hasAttributes()) {
+                node.removeChild(node.getChildNodes().item(i));
+                continue;
+            }
+            if (node.getChildNodes().item(i).hasChildNodes()) {
+                for (int j = node.getChildNodes().item(i).getChildNodes().getLength()-1; j >= 0; j--) {
+                    if (node.getChildNodes().item(i).getChildNodes().item(j).getTextContent().trim().isEmpty() && !node.getChildNodes().item(i).getChildNodes().item(j).hasAttributes()) {
+                        node.getChildNodes().item(i).removeChild(node.getChildNodes().item(i).getChildNodes().item(j));
+                    }
+                }
+            }
+        }
+        return node;
+    }
+
+    public static String setRawVersion(String filePath) {
+        NodeList softwareVersionNodeList;
+        String softwareVersion;
+        String[] softwareVersionSplit = null;
+        try {
+            softwareVersionNodeList = getRootElement(getDocument(filePath)).getElementsByTagName("SoftwareVersion");
+            softwareVersion = softwareVersionNodeList.item(0).getTextContent();
+            softwareVersionSplit = softwareVersion.split(" ");
+        } catch (Exception e) {
+            System.out.println("Exception thrown while setting raw version");
+            System.out.println(e);
+        }
+        if (softwareVersionSplit[0].equals("ACORN")) {
+            return softwareVersionSplit[3];
+        } else {
+            return softwareVersionSplit[2];
+        }
+    }
+}
