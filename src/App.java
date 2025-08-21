@@ -1,4 +1,7 @@
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,21 +17,28 @@ public class App {
     public static String version;
     public static String machine;
     public static void main(String[] args) throws Exception {
+        setFileDirectory();
+        setBoardType();
+        setMachineType();
+        setRawVersion();
 
-        //set board type
-        NodeList boardVersionNodeList;
-        String boardVersion;
-        String oldFilePath = "C:/" + directory + "/mpu_info.xml";
+        
+        if (directory == null || version == null || board == null || machine == null) {
+            throw new IllegalArgumentException("something was null");
+        }
+        System.out.println(directory + "_" + version + "_" + board + "_" + machine);
+
+        Path sourcePath = Paths.get("C:/" + directory);
+        Path destinationPath = Paths.get("C:/" + directory + "_" + version + "_" + board + "_" + machine);
         try {
-            boardVersionNodeList = getRootElement(getDocument(oldFilePath)).getElementsByTagName("PLCDeviceID");
-            boardVersion = boardVersionNodeList.item(0).getTextContent();
-            board = boardVersion.split("_")[2];
+            Files.move(sourcePath, destinationPath);
         } catch (Exception e) {
-            System.out.println("Exception thrown while setting board type");
+            System.out.println("exception thrown while renaming " + directory);
             System.out.println(e);
         }
-        
-        //set machine type
+    }
+
+    public static void setMachineType() {
         File cncmExe = new File("C:/" + directory + "/cncm.exe");
         File cnctExe = new File("C:/" + directory + "/cnct.exe");
         File cncrExe = new File("C:/" + directory + "/cncr.exe");
@@ -45,30 +55,28 @@ public class App {
         } else if (cnclExe.exists()) {
             machine = "laser";
         }
+    }
 
-        //set file directory
+    public static void setFileDirectory() {
         if (directory.equals("cnct")) {
             fileDirectory = "cnct";
         } else {
             fileDirectory = "cncm";
         }
-        
-        //set CNC12 version
-        version = setRawVersion("C:/" + directory + "/" + fileDirectory + ".prm.xml");
+    }
 
-        // Path sourcePath = Paths.get("C:/" + directory);
-        // Path destinationPath = Paths.get("C:/renamed_" + directory);
-        // try {
-        //     Files.move(sourcePath, destinationPath);
-        //     System.out.println("renamed");
-        // } catch (Exception e) {
-        //     System.out.println("exception thrown while renaming " + directory);
-        //     System.out.println(e);
-        // }
-        if (directory == null || version == null || board == null || machine == null) {
-            throw new IllegalArgumentException("something was null");
+    public static void setBoardType() {
+        NodeList boardVersionNodeList;
+        String boardVersion = null;
+        String oldFilePath = "C:/" + directory + "/mpu_info.xml";
+        try {
+            boardVersionNodeList = getRootElement(getDocument(oldFilePath)).getElementsByTagName("PLCDeviceID");
+            boardVersion = boardVersionNodeList.item(0).getTextContent();
+            board = boardVersion.split("_")[2];
+        } catch (Exception e) {
+            System.out.println("Exception thrown while setting board type");
+            System.out.println(e);
         }
-        System.out.println(directory + "_" + version + "_" + board + "_" + machine);
     }
 
     public static Document getDocument(String filePath) {
@@ -114,12 +122,12 @@ public class App {
         return node;
     }
 
-    public static String setRawVersion(String filePath) {
+    public static void setRawVersion() {
         NodeList softwareVersionNodeList;
         String softwareVersion;
         String[] softwareVersionSplit = null;
         try {
-            softwareVersionNodeList = getRootElement(getDocument(filePath)).getElementsByTagName("SoftwareVersion");
+            softwareVersionNodeList = getRootElement(getDocument("C:/" + directory + "/" + fileDirectory + ".prm.xml")).getElementsByTagName("SoftwareVersion");
             softwareVersion = softwareVersionNodeList.item(0).getTextContent();
             softwareVersionSplit = softwareVersion.split(" ");
         } catch (Exception e) {
@@ -127,9 +135,9 @@ public class App {
             System.out.println(e);
         }
         if (softwareVersionSplit[0].equals("ACORN")) {
-            return softwareVersionSplit[3];
+            version = softwareVersionSplit[3];
         } else {
-            return softwareVersionSplit[2];
+            version = softwareVersionSplit[2];
         }
     }
 }
