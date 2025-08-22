@@ -2,6 +2,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,26 +18,37 @@ public class App {
     public static String board;
     public static String version;
     public static String machine;
+    public static String date;
+    public static String time;
     public static void main(String[] args) throws Exception {
         setFileDirectory();
         setBoardType();
         setMachineType();
         setRawVersion();
-
+        setDateTime();
+        // renameDirectory();
         
-        if (directory == null || version == null || board == null || machine == null) {
-            throw new IllegalArgumentException("something was null");
-        }
-        System.out.println(directory + "_" + version + "_" + board + "_" + machine);
+        System.out.println(directory + "_" + version + "_" + board + "_" + machine + "_" + date + "_" + time);
+    }
 
+    public static void renameDirectory() {
         Path sourcePath = Paths.get("C:/" + directory);
-        Path destinationPath = Paths.get("C:/" + directory + "_" + version + "_" + board + "_" + machine);
+        Path destinationPath = Paths.get("C:/" + directory + "_" + version + "_" + board + "_" + machine + "_" + date + "_" + time);
         try {
             Files.move(sourcePath, destinationPath);
         } catch (Exception e) {
             System.out.println("exception thrown while renaming " + directory);
             System.out.println(e);
         }
+    }
+
+    public static void setDateTime() {
+        String dateNow = String.valueOf(LocalDate.now());
+        String timeNow = String.valueOf(LocalTime.now());
+        String[] dateSplit = dateNow.split("-");
+        date = dateSplit[1] + "-" + dateSplit[2] + "-" + dateSplit[0].split("0")[1];
+        String[] timeSplit = timeNow.split(":");
+        time = timeSplit[0] + "." + timeSplit[1];
     }
 
     public static void setMachineType() {
