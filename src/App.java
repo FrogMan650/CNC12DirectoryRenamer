@@ -23,13 +23,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class App extends Application {
-    //public static String directory;
-    //public static String fileDirectory;
-    //public static String board;
-    //public static String version;
-    //public static String machine;
-    //public static String date;
-    //public static String time;
     public static void main(String[] args) throws Exception {
         launch(args);
     }
@@ -213,8 +206,8 @@ public class App extends Application {
         stage.setTitle("Directory Renamer");
         Image icon = new Image("LK_logo.png");
         stage.getIcons().add(icon);
-        stage.setWidth(250);
-        stage.setHeight(500);
+        stage.setWidth(500);
+        stage.setHeight(225);
         stage.setResizable(false);
         stage.setX(50);
         stage.setY(50);
@@ -222,74 +215,79 @@ public class App extends Application {
 
         Button cncmButton = new Button("cncm");
         Text cncmText = new Text();
-        cncmText.setX(0);
-        cncmText.setY(40);
+        cncmText.setX(60);
+        cncmText.setY(20);
         cncmText.setFill(Color.WHITE);
         cncmButton.setPrefSize(50, 25);
-        cncmButton.setLayoutX(100);
-        cncmButton.setLayoutY(0);
+        cncmButton.setLayoutX(5);
+        cncmButton.setLayoutY(5);
         cncmButton.setOnAction(event -> {
+            cncmText.setText(renamedDirectory("cncm"));
             renameDirectory("cncm");
             cncmButton.setText("DONE");
-            cncmText.setText(renamedDirectory("cncm"));
         });
         Button cnctButton = new Button("cnct");
         Text cnctText = new Text();
-        cnctText.setX(0);
-        cnctText.setY(90);
+        cnctText.setX(60);
+        cnctText.setY(50);
         cnctText.setFill(Color.WHITE);
         cnctButton.setPrefSize(50, 25);
-        cnctButton.setLayoutX(100);
-        cnctButton.setLayoutY(50);
+        cnctButton.setLayoutX(5);
+        cnctButton.setLayoutY(35);
         cnctButton.setOnAction(event -> {
+            cnctText.setText(renamedDirectory("cnct"));
             renameDirectory("cnct");
             cnctButton.setText("DONE");
-            cnctText.setText(renamedDirectory("cnct"));
         });
         Button cncrButton = new Button("cncr");
         Text cncrText = new Text();
-        cncrText.setX(0);
-        cncrText.setY(140);
+        cncrText.setX(60);
+        cncrText.setY(80);
         cncrText.setFill(Color.WHITE);
         cncrButton.setPrefSize(50, 25);
-        cncrButton.setLayoutX(100);
-        cncrButton.setLayoutY(100);
+        cncrButton.setLayoutX(5);
+        cncrButton.setLayoutY(65);
         cncrButton.setOnAction(event -> {
+            cncrText.setText(renamedDirectory("cncr"));
             renameDirectory("cncr");
             cncrButton.setText("DONE");
-            cncrText.setText(renamedDirectory("cncr"));
         });
         Button cncpButton = new Button("cncp");
         Text cncpText = new Text();
-        cncpText.setX(0);
-        cncpText.setY(190);
+        cncpText.setX(60);
+        cncpText.setY(110);
         cncpText.setFill(Color.WHITE);
         cncpButton.setPrefSize(50, 25);
-        cncpButton.setLayoutX(100);
-        cncpButton.setLayoutY(150);
+        cncpButton.setLayoutX(5);
+        cncpButton.setLayoutY(95);
         cncpButton.setOnAction(event -> {
+            cncpText.setText(renamedDirectory("cncp"));
             renameDirectory("cncp");
             cncpButton.setText("DONE");
-            cncpText.setText(renamedDirectory("cncp"));
         });
         Button cnclButton = new Button("cncl");
         Text cnclText = new Text();
-        cnclText.setX(0);
-        cnclText.setY(240);
+        cnclText.setX(60);
+        cnclText.setY(140);
         cnclText.setFill(Color.WHITE);
         cnclButton.setPrefSize(50, 25);
-        cnclButton.setLayoutX(100);
-        cnclButton.setLayoutY(200);
+        cnclButton.setLayoutX(5);
+        cnclButton.setLayoutY(125);
         cnclButton.setOnAction(event -> {
+            cnclText.setText(renamedDirectory("cncl"));
             renameDirectory("cncl");
             cnclButton.setText("DONE");
-            cnclText.setText(renamedDirectory("cncl"));
         });
         Button allButton = new Button("All");
         allButton.setPrefSize(50, 25);
-        allButton.setLayoutX(100);
-        allButton.setLayoutY(250);
+        allButton.setLayoutX(5);
+        allButton.setLayoutY(155);
         allButton.setOnAction(event -> {
+            cncmText.setText(renamedDirectory("cncm"));
+            cnctText.setText(renamedDirectory("cnct"));
+            cncrText.setText(renamedDirectory("cncr"));
+            cncpText.setText(renamedDirectory("cncp"));
+            cnclText.setText(renamedDirectory("cncl"));
             renameAllDirectory();
             allButton.setText("DONE");
         });
@@ -300,6 +298,10 @@ public class App extends Application {
         root.getChildren().add(cncpButton);
         root.getChildren().add(cnclButton);
         root.getChildren().add(cncmText);
+        root.getChildren().add(cnctText);
+        root.getChildren().add(cncrText);
+        root.getChildren().add(cncpText);
+        root.getChildren().add(cnclText);
 
         stage.setScene(scene);
         stage.show();
