@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import javax.swing.GroupLayout.Alignment;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -220,9 +221,10 @@ public class App extends Application {
         stage.setFullScreen(false);
 
         Button cncmButton = new Button("cncm");
-        Text cncmText = new Text("This placeholder text");
-        cncmText.setX(50);
-        cncmText.setY(25);
+        Text cncmText = new Text();
+        cncmText.setX(0);
+        cncmText.setY(40);
+        cncmText.setFill(Color.WHITE);
         cncmButton.setPrefSize(50, 25);
         cncmButton.setLayoutX(100);
         cncmButton.setLayoutY(0);
@@ -233,6 +235,9 @@ public class App extends Application {
         });
         Button cnctButton = new Button("cnct");
         Text cnctText = new Text();
+        cnctText.setX(0);
+        cnctText.setY(90);
+        cnctText.setFill(Color.WHITE);
         cnctButton.setPrefSize(50, 25);
         cnctButton.setLayoutX(100);
         cnctButton.setLayoutY(50);
@@ -243,6 +248,9 @@ public class App extends Application {
         });
         Button cncrButton = new Button("cncr");
         Text cncrText = new Text();
+        cncrText.setX(0);
+        cncrText.setY(140);
+        cncrText.setFill(Color.WHITE);
         cncrButton.setPrefSize(50, 25);
         cncrButton.setLayoutX(100);
         cncrButton.setLayoutY(100);
@@ -253,6 +261,9 @@ public class App extends Application {
         });
         Button cncpButton = new Button("cncp");
         Text cncpText = new Text();
+        cncpText.setX(0);
+        cncpText.setY(190);
+        cncpText.setFill(Color.WHITE);
         cncpButton.setPrefSize(50, 25);
         cncpButton.setLayoutX(100);
         cncpButton.setLayoutY(150);
@@ -263,6 +274,9 @@ public class App extends Application {
         });
         Button cnclButton = new Button("cncl");
         Text cnclText = new Text();
+        cnclText.setX(0);
+        cnclText.setY(240);
+        cnclText.setFill(Color.WHITE);
         cnclButton.setPrefSize(50, 25);
         cnclButton.setLayoutX(100);
         cnclButton.setLayoutY(200);
