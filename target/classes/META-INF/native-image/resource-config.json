@@ -1,0 +1,13 @@
+{
+  "resources":{
+  "includes":[{
+      "pattern":"\\Qcom/frogman650/LK_logo.png\\E"
+    }]},
+  "bundles":[{
+      "name":"com.sun.javafx.tk.quantum.QuantumMessagesBundle",
+      "locales":[
+        "", 
+        "und"
+      ]
+    }]
+}
