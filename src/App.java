@@ -54,14 +54,15 @@ public class App extends Application {
             } else {
                 machine = "";
             }
-            Path sourcePath = Paths.get("C:/" + directory);
-            Path destinationPath = Paths.get("C:/" + directory + "_" + getVersion(directory) + "_" + getBoardType(directory) + "_" + machine + getDate() + "_" + getTime());
-            try {
-                Files.move(sourcePath, destinationPath);
-            } catch (Exception e) {
-                System.out.println("exception thrown while renaming " + directory);
-                System.out.println(e);
-            }
+            System.out.println(directory + "_" + getVersion(directory) + "_" + getBoardType(directory) + "_" + machine + "_" + getDate() + "_" + getTime());
+            // Path sourcePath = Paths.get("C:/" + directory);
+            // Path destinationPath = Paths.get("C:/" + directory + "_" + getVersion(directory) + "_" + getBoardType(directory) + "_" + machine + getDate() + "_" + getTime());
+            // try {
+            //     Files.move(sourcePath, destinationPath);
+            // } catch (Exception e) {
+            //     System.out.println("exception thrown while renaming " + directory);
+            //     System.out.println(e);
+            // }
         }
     }
 
