@@ -31,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -40,11 +41,13 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -54,6 +57,8 @@ public class App extends Application {
     public static String[] machines = {"mill", "lathe", "router", "plasma", "laser"};
     public static ArrayList<ToggleButton> toggleButtonArray = new ArrayList<>();
     public static File executableDirectory;
+    public static File appDataDirectory;
+    public static File printedDirectory;
     public static File logFile;
     public static ArrayList<Directory> directoryArray = new ArrayList<>();
     public static TableView<Directory> directoryTableView;
@@ -64,6 +69,11 @@ public class App extends Application {
     public static Directory selectedDirectory;
     public static HostServices hostService;
     public static MenuItem deactivateAllMenuItem;
+    public static String printFileName;
+    public static Boolean printSubDirectories = false;
+    public static Boolean openFileWhenDone = true;
+    public static Boolean prettyPrint = true;
+    public static int indentCounter = 0;
     public static void main(String[] args) throws Exception {
         launch(args);
     }
@@ -73,22 +83,151 @@ public class App extends Application {
         //define constants
         URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
         executableDirectory = Paths.get(uri).getParent().toFile();
-        logFile = new File(executableDirectory, "logs.txt");
+        String appDataString = System.getenv("LOCALAPPDATA") + "/CentroidTechSupportTools";
+        Path appDataPath = Paths.get(appDataString);
+        appDataDirectory = appDataPath.toFile();
+        if (!appDataDirectory.exists()) {
+            try {
+                Files.createDirectory(appDataDirectory.toPath());
+            } catch (Exception e) {
+                System.out.println("Error creating AppData/Local/CentroidTechSupportTools folder:\n" + e);
+            }
+        }
+        String printedFolder = appDataString + "/printed";
+        Path printedPath = Paths.get(printedFolder);
+        printedDirectory = printedPath.toFile();
+        if (!printedDirectory.exists()) {
+            try {
+                Files.createDirectory(printedDirectory.toPath());
+            } catch (Exception e) {
+                System.out.println("Error creating AppData/Local/CentroidTechSupportTools/printed folder:\n" + e);
+            }
+        }
+        logFile = new File(appDataDirectory, "logs.txt");
+        if (!logFile.exists()) {
+            try {
+                logFile.createNewFile();
+            } catch (Exception e) {
+                System.out.println("Error creating AppData/Local/CentroidTechSupportTools logs file:\n" + e);
+            }
+        }
         hostService = getHostServices();
 
         //define everything we need for the base GUI
         AnchorPane installTweakerAnchor = new AnchorPane();
         AnchorPane directoryManagerAnchor = new AnchorPane();
+        AnchorPane filePrinterAnchor = new AnchorPane();
         AnchorPane helpAnchor = new AnchorPane();
         Tab installTweakerTab = new Tab("Install tweaker", installTweakerAnchor);
         Tab directoryManagerTab = new Tab("Directory manager", directoryManagerAnchor);
+        Tab filePrinterTab = new Tab("File printer", filePrinterAnchor);
         Tab helpTab = new Tab("Help", helpAnchor);
         installTweakerTab.setClosable(false);
         directoryManagerTab.setClosable(false);
+        filePrinterTab.setClosable(false);
         helpTab.setClosable(false);
-        TabPane root = new TabPane(directoryManagerTab, installTweakerTab, helpTab);
+        TabPane root = new TabPane(directoryManagerTab, filePrinterTab, installTweakerTab, helpTab);
         Scene scene = new Scene(root, Color.BLACK);
         Image icon = new Image(App.class.getResourceAsStream("LK_logo_square.png"));
+
+        /*=============================================
+                    File printer start
+        ==============================================*/
+        HBox directoryPrinterHBox = new HBox();
+        directoryPrinterHBox.setId("directoryPrinterHBox");
+        directoryPrinterHBox.setSpacing(5);
+        TextField directoryToPrintTextField = new TextField();
+        directoryToPrintTextField.setId("directoryToPrintTextField");
+        directoryToPrintTextField.setPromptText("Enter Directory Path");
+        Button directoryToPrintButton = new Button("Print");
+        directoryToPrintButton.setId("directoryToPrintButton");
+        directoryToPrintButton.setOnAction(event -> {
+            indentCounter = 0;
+            printFileName = getDate() + "_" + getTime();
+            String directoryToPrintString = directoryToPrintTextField.getText();
+            Path directoryToPrintPath = null;
+            try {
+                //handle path potentially being in quotes
+                try {
+                    directoryToPrintPath = Paths.get(directoryToPrintString);
+                } catch (Exception e) {
+                    directoryToPrintPath = Paths.get(directoryToPrintString.split("\"")[1]);
+                }
+                File directoryToPrintFile = directoryToPrintPath.toFile();
+                File newPrintedFile = new File(printedDirectory, printFileName + ".txt");
+                //create the new print file
+                try {
+                    newPrintedFile.createNewFile();
+                } catch (Exception e) {
+                    writeToLogFile("Error creating new print file", e.toString());
+                }
+                //print out the file names in the specified directory
+                printDirectory(newPrintedFile, directoryToPrintFile);
+                //open the new file once done if the checkbox is marked
+                if (openFileWhenDone) {
+                    hostService.showDocument(newPrintedFile.toString());
+                }
+            } catch (Exception e) {
+                writeToLogFile("Error printing files from path", e.toString());
+            }
+        });
+        //checkbox to set if subdirectory files are printed or not
+        CheckBox subDirectoryCheckBox = new CheckBox();
+        subDirectoryCheckBox.setOnAction(event -> {
+            if (subDirectoryCheckBox.isSelected()) {
+                printSubDirectories = true;
+            } else {
+                printSubDirectories = false;
+            }
+        });
+        Tooltip subDirectoryCheckBoxToolTip = new Tooltip("Print subdirectory files");
+        subDirectoryCheckBoxToolTip.setId("toolTip");
+        subDirectoryCheckBox.setOnMouseMoved(event -> {
+            subDirectoryCheckBoxToolTip.show(subDirectoryCheckBox, event.getScreenX() + 10, event.getScreenY() + 20);
+        });
+        subDirectoryCheckBox.setOnMouseExited(event -> {
+            subDirectoryCheckBoxToolTip.hide();
+        });
+        //checkbox to set if the new file should be opened after creation
+        CheckBox openFileCheckBox = new CheckBox();
+        openFileCheckBox.setSelected(true);
+        openFileCheckBox.setOnAction(event -> {
+            if (openFileCheckBox.isSelected()) {
+                openFileWhenDone = true;
+            } else {
+                openFileWhenDone = false;
+            }
+        });
+        Tooltip openFileCheckBoxToolTip = new Tooltip("Open file when done");
+        openFileCheckBoxToolTip.setId("toolTip");
+        openFileCheckBox.setOnMouseMoved(event -> {
+            openFileCheckBoxToolTip.show(openFileCheckBox, event.getScreenX() + 10, event.getScreenY() + 20);
+        });
+        openFileCheckBox.setOnMouseExited(event -> {
+            openFileCheckBoxToolTip.hide();
+        });
+        //checkbox to set if the printed files should be in "pretty print" format
+        CheckBox prettyPrintCheckBox = new CheckBox();
+        prettyPrintCheckBox.setSelected(true);
+        prettyPrintCheckBox.setOnAction(event -> {
+            if (prettyPrintCheckBox.isSelected()) {
+                prettyPrint = true;
+            } else {
+                prettyPrint = false;
+            }
+        });
+        Tooltip prettyPrintCheckBoxToolTip = new Tooltip("Pretty print");
+        prettyPrintCheckBoxToolTip.setId("toolTip");
+        prettyPrintCheckBox.setOnMouseMoved(event -> {
+            prettyPrintCheckBoxToolTip.show(prettyPrintCheckBox, event.getScreenX() + 10, event.getScreenY() + 20);
+        });
+        prettyPrintCheckBox.setOnMouseExited(event -> {
+            prettyPrintCheckBoxToolTip.hide();
+        });
+        directoryPrinterHBox.getChildren().addAll(directoryToPrintTextField, directoryToPrintButton, subDirectoryCheckBox, openFileCheckBox, prettyPrintCheckBox);
+        AnchorPane directoryPrinterAnchor = new AnchorPane(directoryPrinterHBox);
+        filePrinterAnchor.getChildren().add(directoryPrinterAnchor);
+
 
         /*=============================================
                         Help start
@@ -810,5 +949,41 @@ public class App extends Application {
             writeToLogFile("Error setting raw version", e.toString());
         }
         return null;
+    }
+
+    public static String indentCounterReturn(int indents) {
+        String indent = "    ";
+        String indentReturn = "";
+        if (prettyPrint) {
+            for (int i = 0; i < indents; i++) {
+                indentReturn = indentReturn + indent;
+            }
+        }
+        return indentReturn;
+    }
+
+    public static void printDirectory(File newPrintedFile, File directoryToPrintFile) {
+        //write directory being printed to the file
+        try {
+            Files.writeString(newPrintedFile.toPath(), indentCounterReturn(indentCounter) + directoryToPrintFile.toPath().toString() + System.lineSeparator(), StandardOpenOption.APPEND);
+        } catch (Exception e) {
+            writeToLogFile("Error writing line to print file", e.toString());
+        }
+        indentCounter ++;
+        //get all files in user specified string
+        File[] files = directoryToPrintFile.listFiles();
+        //write all files in directory to the file
+        for (File file : files) {
+            try {
+                if (file.isDirectory() && printSubDirectories) {
+                    printDirectory(newPrintedFile, file);
+                } else {
+                    Files.writeString(newPrintedFile.toPath(), indentCounterReturn(indentCounter) + file.getName() + System.lineSeparator(), StandardOpenOption.APPEND);
+                }
+            } catch (Exception e) {
+                writeToLogFile("Error writing line to print file", e.toString());
+            }
+        }
+        indentCounter --;
     }
 }

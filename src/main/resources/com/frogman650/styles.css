@@ -89,3 +89,20 @@
     -fx-padding: 3;
     -fx-text-alignment: CENTER;
 }
+
+#directoryPrinterHBox {
+    -fx-alignment: CENTER;
+    -fx-padding: 5;
+}
+
+#directoryToPrintTextField {
+    -fx-pref-width: 500;
+    -fx-pref-height: 50;
+    -fx-font-size: 20;
+}
+
+#directoryToPrintButton {
+    -fx-pref-width: 50;
+    -fx-pref-width: 100;
+    -fx-font-size: 20;
+}
