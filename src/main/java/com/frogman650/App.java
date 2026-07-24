@@ -21,14 +21,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -58,7 +57,8 @@ public class App extends Application {
     public static ArrayList<ToggleButton> toggleButtonArray = new ArrayList<>();
     public static File executableDirectory;
     public static File appDataDirectory;
-    public static File printedDirectory;
+    public static File filePrintedDirectory;
+    public static File iOPrintedDirectory;
     public static File logFile;
     public static ArrayList<Directory> directoryArray = new ArrayList<>();
     public static TableView<Directory> directoryTableView;
@@ -93,14 +93,24 @@ public class App extends Application {
                 System.out.println("Error creating AppData/Local/CentroidTechSupportTools folder:\n" + e);
             }
         }
-        String printedFolder = appDataString + "/printed";
-        Path printedPath = Paths.get(printedFolder);
-        printedDirectory = printedPath.toFile();
-        if (!printedDirectory.exists()) {
+        String filePrintedFolder = appDataString + "/files_printed";
+        Path filePrintedPath = Paths.get(filePrintedFolder);
+        filePrintedDirectory = filePrintedPath.toFile();
+        if (!filePrintedDirectory.exists()) {
             try {
-                Files.createDirectory(printedDirectory.toPath());
+                Files.createDirectory(filePrintedDirectory.toPath());
             } catch (Exception e) {
-                System.out.println("Error creating AppData/Local/CentroidTechSupportTools/printed folder:\n" + e);
+                System.out.println("Error creating AppData/Local/CentroidTechSupportTools/files_printed folder:\n" + e);
+            }
+        }
+        String iOPrintedFolder = appDataString + "/IO_printed";
+        Path iOPrintedPath = Paths.get(iOPrintedFolder);
+        iOPrintedDirectory = iOPrintedPath.toFile();
+        if (!iOPrintedDirectory.exists()) {
+            try {
+                Files.createDirectory(iOPrintedDirectory.toPath());
+            } catch (Exception e) {
+                System.out.println("Error creating AppData/Local/CentroidTechSupportTools/IO_printed folder:\n" + e);
             }
         }
         logFile = new File(appDataDirectory, "logs.txt");
@@ -117,30 +127,37 @@ public class App extends Application {
         AnchorPane installTweakerAnchor = new AnchorPane();
         AnchorPane directoryManagerAnchor = new AnchorPane();
         AnchorPane filePrinterAnchor = new AnchorPane();
+        AnchorPane iOPrinterAnchor = new AnchorPane();
         AnchorPane helpAnchor = new AnchorPane();
         Tab installTweakerTab = new Tab("Install tweaker", installTweakerAnchor);
         Tab directoryManagerTab = new Tab("Directory manager", directoryManagerAnchor);
         Tab filePrinterTab = new Tab("File printer", filePrinterAnchor);
+        Tab iOPrinterTab = new Tab("IO printer", iOPrinterAnchor);
         Tab helpTab = new Tab("Help", helpAnchor);
         installTweakerTab.setClosable(false);
         directoryManagerTab.setClosable(false);
         filePrinterTab.setClosable(false);
+        iOPrinterTab.setClosable(false);
         helpTab.setClosable(false);
-        TabPane root = new TabPane(directoryManagerTab, filePrinterTab, installTweakerTab, helpTab);
+        TabPane root = new TabPane(directoryManagerTab, filePrinterTab, iOPrinterTab, installTweakerTab, helpTab);
         Scene scene = new Scene(root, Color.BLACK);
         Image icon = new Image(App.class.getResourceAsStream("LK_logo_square.png"));
+        
+        //checkboxes that need to be linked
+        CheckBox iOOpenFileCheckBox = new CheckBox();
+        CheckBox openFileCheckBox = new CheckBox();
 
         /*=============================================
                     File printer start
         ==============================================*/
         HBox directoryPrinterHBox = new HBox();
-        directoryPrinterHBox.setId("directoryPrinterHBox");
+        directoryPrinterHBox.setId("printerHBox");
         directoryPrinterHBox.setSpacing(5);
         TextField directoryToPrintTextField = new TextField();
-        directoryToPrintTextField.setId("directoryToPrintTextField");
-        directoryToPrintTextField.setPromptText("Enter Directory Path");
+        directoryToPrintTextField.setId("printerTextField");
+        directoryToPrintTextField.setPromptText("Directory path for file name extraction");
         Button directoryToPrintButton = new Button("Print");
-        directoryToPrintButton.setId("directoryToPrintButton");
+        directoryToPrintButton.setId("printButton");
         directoryToPrintButton.setOnAction(event -> {
             indentCounter = 0;
             printFileName = getDate() + "_" + getTime();
@@ -154,7 +171,7 @@ public class App extends Application {
                     directoryToPrintPath = Paths.get(directoryToPrintString.split("\"")[1]);
                 }
                 File directoryToPrintFile = directoryToPrintPath.toFile();
-                File newPrintedFile = new File(printedDirectory, printFileName + ".txt");
+                File newPrintedFile = new File(filePrintedDirectory, printFileName + ".txt");
                 //create the new print file
                 try {
                     newPrintedFile.createNewFile();
@@ -170,6 +187,7 @@ public class App extends Application {
             } catch (Exception e) {
                 writeToLogFile("Error printing files from path", e.toString());
             }
+            directoryToPrintTextField.clear();
         });
         //checkbox to set if subdirectory files are printed or not
         CheckBox subDirectoryCheckBox = new CheckBox();
@@ -189,13 +207,14 @@ public class App extends Application {
             subDirectoryCheckBoxToolTip.hide();
         });
         //checkbox to set if the new file should be opened after creation
-        CheckBox openFileCheckBox = new CheckBox();
         openFileCheckBox.setSelected(true);
         openFileCheckBox.setOnAction(event -> {
             if (openFileCheckBox.isSelected()) {
                 openFileWhenDone = true;
+                iOOpenFileCheckBox.setSelected(true);
             } else {
                 openFileWhenDone = false;
+                iOOpenFileCheckBox.setSelected(false);
             }
         });
         Tooltip openFileCheckBoxToolTip = new Tooltip("Open file when done");
@@ -227,7 +246,106 @@ public class App extends Application {
         directoryPrinterHBox.getChildren().addAll(directoryToPrintTextField, directoryToPrintButton, subDirectoryCheckBox, openFileCheckBox, prettyPrintCheckBox);
         AnchorPane directoryPrinterAnchor = new AnchorPane(directoryPrinterHBox);
         filePrinterAnchor.getChildren().add(directoryPrinterAnchor);
+        /*==========================================
+                    File printer end
+        ==========================================*/
 
+        /*=============================================
+                    IO printer start
+        ==============================================*/
+        HBox iOPrinterHBox = new HBox();
+        iOPrinterHBox.setId("printerHBox");
+        iOPrinterHBox.setSpacing(5);
+        TextField iOFileToPrintTextField = new TextField();
+        iOFileToPrintTextField.setId("printerTextField");
+        iOFileToPrintTextField.setPromptText("CNC12 directory path for functions.xml extraction");
+        Button iOFileToPrintButton = new Button("Print");
+        iOFileToPrintButton.setId("printButton");
+        iOFileToPrintButton.setOnAction(event -> {
+            printFileName = getDate() + "_" + getTime();
+            String fileToPrintString = iOFileToPrintTextField.getText();
+            Path fileToPrintPath = null;
+            try {
+                //handle path potentially being in quotes
+                try {
+                    fileToPrintPath = Paths.get(fileToPrintString, "/resources/wizard/default/plc/functions.xml");
+                } catch (Exception e) {
+                    fileToPrintPath = Paths.get(fileToPrintString.split("\"")[1], "/resources/wizard/default/plc/functions.xml");
+                }
+                File fileToPrintFile = fileToPrintPath.toFile();
+                File newPrintedFile = new File(iOPrintedDirectory, printFileName + ".txt");
+                //create the new print file
+                try {
+                    newPrintedFile.createNewFile();
+                } catch (Exception e) {
+                    writeToLogFile("Error creating new print file", e.toString());
+                }
+                //print out the functions to a file in a spreadsheet format
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document document = builder.parse(fileToPrintFile);
+                Element rootElement = document.getDocumentElement();
+                NodeList iONodeList = rootElement.getElementsByTagName("PlcFunction");
+                try {
+                    Files.writeString(newPrintedFile.toPath(), fileToPrintFile.toString() + "\n" + System.lineSeparator(), StandardOpenOption.APPEND);
+                    Files.writeString(newPrintedFile.toPath(), "Display name\tType\tCustom\tSafety\tATC\tMachine types" + System.lineSeparator(), StandardOpenOption.APPEND);
+                    for (int i = 0; i < iONodeList.getLength(); i++) {
+                        Element iOElement = (Element) iONodeList.item(i);
+                        Element iOSubelement;
+                        String iOType = iOElement.getAttributes().item(0).getTextContent();
+                        iOSubelement = (Element) iOElement.getElementsByTagName("IsCustom").item(0);
+                        String iOIsCustom = iOSubelement.getTextContent();
+                        iOSubelement = (Element) iOElement.getElementsByTagName("Safety").item(0);
+                        String iOSafety = iOSubelement.getTextContent();
+                        iOSubelement = (Element) iOElement.getElementsByTagName("IsATC").item(0);
+                        String iOIsATC = iOSubelement.getTextContent();
+                        iOSubelement = (Element) iOElement.getElementsByTagName("DisplayName").item(0);
+                        String iODisplayName = iOSubelement.getTextContent();
+                        iOSubelement = (Element) iOElement.getElementsByTagName("Machine").item(0);
+                        NodeList machineTypeNodeList = iOSubelement.getElementsByTagName("MachineType");
+                        String machineTypeString = "";
+                        for (int j = 0; j < machineTypeNodeList.getLength(); j++) {
+                            machineTypeString = machineTypeString + machineTypeNodeList.item(j).getTextContent() + "\t";
+                        }
+                        Files.writeString(newPrintedFile.toPath(), iODisplayName + "\t" + iOType + "\t" + iOIsCustom + "\t" + iOSafety + "\t" + iOIsATC + "\t" + machineTypeString + System.lineSeparator(), StandardOpenOption.APPEND);
+                    }
+                } catch (Exception e) {
+                    writeToLogFile("Error printing IO from path", e.toString());
+                }
+                //open the new file once done if the checkbox is marked
+                if (openFileWhenDone) {
+                    hostService.showDocument(newPrintedFile.toString());
+                }
+            } catch (Exception e) {
+                writeToLogFile("Error printing IO from path", e.toString());
+            }
+            iOFileToPrintTextField.clear();
+        });
+        //checkbox to set if the new file should be opened after creation
+        iOOpenFileCheckBox.setSelected(true);
+        iOOpenFileCheckBox.setOnAction(event -> {
+            if (iOOpenFileCheckBox.isSelected()) {
+                openFileWhenDone = true;
+                openFileCheckBox.setSelected(true);
+            } else {
+                openFileWhenDone = false;
+                openFileCheckBox.setSelected(false);
+            }
+        });
+        Tooltip iOOpenFileCheckBoxToolTip = new Tooltip("Open file when done");
+        iOOpenFileCheckBoxToolTip.setId("toolTip");
+        iOOpenFileCheckBox.setOnMouseMoved(event -> {
+            iOOpenFileCheckBoxToolTip.show(iOOpenFileCheckBox, event.getScreenX() + 10, event.getScreenY() + 20);
+        });
+        iOOpenFileCheckBox.setOnMouseExited(event -> {
+            iOOpenFileCheckBoxToolTip.hide();
+        });
+        iOPrinterHBox.getChildren().addAll(iOFileToPrintTextField, iOFileToPrintButton, iOOpenFileCheckBox);
+        AnchorPane iOFilePrinterAnchor = new AnchorPane(iOPrinterHBox);
+        iOPrinterAnchor.getChildren().add(iOFilePrinterAnchor);
+        /*==========================================
+                    IO printer end
+        ==========================================*/
 
         /*=============================================
                         Help start
@@ -268,7 +386,30 @@ public class App extends Application {
         helpInstallTweakerbodyLabel.setId("helpBodyLabel");
         VBox helpInstallTweakerVBox = new VBox(helpInstallTweakerHeaderLabel, helpInstallTweakerbodyLabel);
         helpInstallTweakerVBox.setId("helpVBox");
-        VBox helpTabMainVBox = new VBox(helpDirectoryManagerVBox, helpInstallTweakerVBox);
+        Label helpFilePrinterHeaderLabel = new Label("File Printer");
+        helpFilePrinterHeaderLabel.setId("helpHeaderLabel");
+        Label helpFilePrinterbodyLabel = new Label("Put in a directory path and every file within that directory will be printed " +
+            "to a new file named with the date and time of creation created here: C:/Users/User/AppData/Local/CentroidTechSupportTools/printed.\n" +
+            "Use the checkboxes to indicate different options:\n" +
+            "Print subdirectory files - When checked files within subdirectory folders will also be printed. When unchecked the subdirectory folder name will be printed only.\n" +
+            "Open file when done - When checked will open the newly created file when the process is complete.\n" +
+            "Pretty print - When checked will print file names in the new file so they are indented based on the directory they fall under to make it a little easier to read."
+        );
+        helpFilePrinterbodyLabel.setId("helpBodyLabel");
+        VBox helpFilePrinterVBox = new VBox(helpFilePrinterHeaderLabel, helpFilePrinterbodyLabel);
+        helpFilePrinterVBox.setId("helpVBox");
+        Label helpIOPrinterHeaderLabel = new Label("IO Printer");
+        helpIOPrinterHeaderLabel.setId("helpHeaderLabel");
+        Label helpIOPrinterbodyLabel = new Label("Put in the directory path of an Acorn, AcornSix, or Hickory CNC12 installation and all of the canned " +
+            "IO from the functions.xml file will be printed to a new file named with the date and time of creation created here: " +
+            "C:/Users/User/AppData/Local/CentroidTechSupportTools/printed.\nIO is printed out in a pattern appropriate for pasting into a spreadsheet.\n" +
+            "Use the checkbox to indicate different options:\n" +
+            "Open file when done - When checked the newly created file will be opened once the process is finished."
+        );
+        helpIOPrinterbodyLabel.setId("helpBodyLabel");
+        VBox helpIOPrinterVBox = new VBox(helpIOPrinterHeaderLabel, helpIOPrinterbodyLabel);
+        helpIOPrinterVBox.setId("helpVBox");
+        VBox helpTabMainVBox = new VBox(helpDirectoryManagerVBox, helpFilePrinterVBox, helpIOPrinterVBox, helpInstallTweakerVBox);
         AnchorPane scrollPaneAnchor = new AnchorPane(helpTabMainVBox);
         ScrollPane helpScrollPane = new ScrollPane(scrollPaneAnchor);
         helpAnchor.getChildren().add(helpScrollPane);
@@ -952,7 +1093,7 @@ public class App extends Application {
     }
 
     public static String indentCounterReturn(int indents) {
-        String indent = "    ";
+        String indent = "\t";
         String indentReturn = "";
         if (prettyPrint) {
             for (int i = 0; i < indents; i++) {
