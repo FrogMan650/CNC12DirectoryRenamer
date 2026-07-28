@@ -1,23 +1,23 @@
 # Centroid Tech Support Tools
 This is a suite of tools to help aid in providing tech support for Centroid.<br><br>
-__Directory Manager__<br>
-'Activate' and 'Deactivate' CNC12 installations.<br>
-On startup or Refresh the C: drive will be checked for any directories with names containing: cncm, cnct, cncr, cncp, or cncl. Information from these directories will then be pulled into the spreadsheet style interface. Here you can see if the directory is Active, the machine type, software version, date and time last modified, the path, and the first line from machine_notes.txt. By default the list is sorted by Active, Machine, and then Version but can be sorted differently by clicking the column headers.<br>
-The table can be filtered by Board and Machine type using the buttons along the left side. Clicking the Filter button will turn on or off all filters at once.<br>
-Left or right click a row in the table to select that row.<br>
-Double left click a row to Activate the directory and start the executable.<br>
-Right click for a context menu to select from several different functions for interacting with the selected installation:<br>
-Refresh: Will force a refresh of the installation list.<br>
-Activate: Will 'Activate' the selected installation meaning that the directory will be renamed properly to cncm, cnct, etc. This, if necessary, will also deactivate other directories.<br>
-Deactivate: Will 'Deactivate' the selected installation renaming the directory. Example: cncm_5.40.04_acorn_01-26-26_10.40.23<br>
-Open Directory: Opens a file explorer to the path of the selected installation.<br>
-Open Notes: Opens the machine_notes.txt of the selected installation. If machine_notes.txt does not exist it is created.<br>
-Open Message Log: Opens the msg_log.txt of the selected installation.<br>
-Start Executable: Starts CNC12 from the selected installation. Note that this will launch the executable from the installation whether it's active or not.<br>
-Deactivate All: Will deactivate all active installations.<br>
+__v1.4 - 7-28-26__
+* Added the "File Printer"
+    * Put in a directory path and all files within will be printed to a file
+    * Subdirectory files can be printed as well with a checkbox
+    * The new file can be opened once the process is finished with a checkbox
+    * The files can be printed in "pretty print" format by using a checkbox to make the file easier to read
+    * Created files can be found here: C:\Users\User\AppData\Local\CentroidTechSupportTools\files_printed
+        * Or click the "Open directory" button
+* Added the "IO Printer"
+    * Put in the directory path for any CNC12 directory with a wizard and the IO from functions.xml will be printed to a new file in a spreadsheet friendly format
+    * The new file can be opened once the process is finished with a checkbox
+    * Created files can be found here: C:\Users\User\AppData\Local\CentroidTechSupportTools\IO_printed
+        * Or click the "Open directory" button
+* Now comes in an installer and changed where and how files are stored/created/written to
+    * The installation folder is here: C:\Program Files\Centroid Tech Support Tools
+    * The only files created/written to now live in a new folder created here: C:\Users\User\AppData\Local\CentroidTechSupportTools
+        * This directory and subdirectories are created on first launch of the app
+* Improved how the Directory Manager was fetching information for Acorn and AcornSix
 
-<img width="1920" height="1032" alt="Image" src="https://github.com/user-attachments/assets/4fb4f2a1-0eab-4443-89d8-bf6704d632e8" /><br>
+<img width="1920" height="1032" alt="Image" src="https://github.com/user-attachments/assets/e4f89a95-ef22-499e-9fc8-f0c6f956ebd9" />
 
-__Install Tweaker__<br>
-Tweak certain settings of installations by selecting from various different options.<br>
-Development of this feature hasn't started yet.
