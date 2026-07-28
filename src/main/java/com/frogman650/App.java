@@ -1,9 +1,13 @@
 package com.frogman650;
 
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +20,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -153,11 +159,17 @@ public class App extends Application {
         HBox directoryPrinterHBox = new HBox();
         directoryPrinterHBox.setId("printerHBox");
         directoryPrinterHBox.setSpacing(5);
+        VBox directoryPrinterVBox = new VBox();
+        directoryPrinterVBox.setId("printerVBox");
+        directoryPrinterVBox.setSpacing(5);
         TextField directoryToPrintTextField = new TextField();
         directoryToPrintTextField.setId("printerTextField");
         directoryToPrintTextField.setPromptText("Directory path for file name extraction");
+        Button openFilePrinterDirectoryButton = new Button("Open directory");
+        openFilePrinterDirectoryButton.setOnAction(event -> {
+            hostService.showDocument(filePrintedDirectory.toPath().toString());
+        });
         Button directoryToPrintButton = new Button("Print");
-        directoryToPrintButton.setId("printButton");
         directoryToPrintButton.setOnAction(event -> {
             indentCounter = 0;
             printFileName = getDate() + "_" + getTime();
@@ -243,8 +255,9 @@ public class App extends Application {
         prettyPrintCheckBox.setOnMouseExited(event -> {
             prettyPrintCheckBoxToolTip.hide();
         });
-        directoryPrinterHBox.getChildren().addAll(directoryToPrintTextField, directoryToPrintButton, subDirectoryCheckBox, openFileCheckBox, prettyPrintCheckBox);
-        AnchorPane directoryPrinterAnchor = new AnchorPane(directoryPrinterHBox);
+        directoryPrinterHBox.getChildren().addAll(directoryToPrintButton, openFilePrinterDirectoryButton, subDirectoryCheckBox, openFileCheckBox, prettyPrintCheckBox);
+        directoryPrinterVBox.getChildren().addAll(directoryToPrintTextField, directoryPrinterHBox);
+        AnchorPane directoryPrinterAnchor = new AnchorPane(directoryPrinterVBox);
         filePrinterAnchor.getChildren().add(directoryPrinterAnchor);
         /*==========================================
                     File printer end
@@ -256,11 +269,17 @@ public class App extends Application {
         HBox iOPrinterHBox = new HBox();
         iOPrinterHBox.setId("printerHBox");
         iOPrinterHBox.setSpacing(5);
+        VBox iOPrinterVBox = new VBox();
+        iOPrinterVBox.setId("printerVBox");
+        iOPrinterVBox.setSpacing(5);
         TextField iOFileToPrintTextField = new TextField();
         iOFileToPrintTextField.setId("printerTextField");
         iOFileToPrintTextField.setPromptText("CNC12 directory path for functions.xml extraction");
+        Button openIOPrinterDirectoryButton = new Button("Open directory");
+        openIOPrinterDirectoryButton.setOnAction(event -> {
+            hostService.showDocument(iOPrintedDirectory.toPath().toString());
+        });
         Button iOFileToPrintButton = new Button("Print");
-        iOFileToPrintButton.setId("printButton");
         iOFileToPrintButton.setOnAction(event -> {
             printFileName = getDate() + "_" + getTime();
             String fileToPrintString = iOFileToPrintTextField.getText();
@@ -340,8 +359,9 @@ public class App extends Application {
         iOOpenFileCheckBox.setOnMouseExited(event -> {
             iOOpenFileCheckBoxToolTip.hide();
         });
-        iOPrinterHBox.getChildren().addAll(iOFileToPrintTextField, iOFileToPrintButton, iOOpenFileCheckBox);
-        AnchorPane iOFilePrinterAnchor = new AnchorPane(iOPrinterHBox);
+        iOPrinterHBox.getChildren().addAll(iOFileToPrintButton, openIOPrinterDirectoryButton, iOOpenFileCheckBox);
+        iOPrinterVBox.getChildren().addAll(iOFileToPrintTextField, iOPrinterHBox);
+        AnchorPane iOFilePrinterAnchor = new AnchorPane(iOPrinterVBox);
         iOPrinterAnchor.getChildren().add(iOFilePrinterAnchor);
         /*==========================================
                     IO printer end
@@ -389,7 +409,7 @@ public class App extends Application {
         Label helpFilePrinterHeaderLabel = new Label("File Printer");
         helpFilePrinterHeaderLabel.setId("helpHeaderLabel");
         Label helpFilePrinterbodyLabel = new Label("Put in a directory path and every file within that directory will be printed " +
-            "to a new file named with the date and time of creation created here: C:/Users/User/AppData/Local/CentroidTechSupportTools/printed.\n" +
+            "to a new file named with the date and time of creation created here: C:/Users/User/AppData/Local/CentroidTechSupportTools/files_printed.\n" +
             "Use the checkboxes to indicate different options:\n" +
             "Print subdirectory files - When checked files within subdirectory folders will also be printed. When unchecked the subdirectory folder name will be printed only.\n" +
             "Open file when done - When checked will open the newly created file when the process is complete.\n" +
@@ -402,7 +422,7 @@ public class App extends Application {
         helpIOPrinterHeaderLabel.setId("helpHeaderLabel");
         Label helpIOPrinterbodyLabel = new Label("Put in the directory path of an Acorn, AcornSix, or Hickory CNC12 installation and all of the canned " +
             "IO from the functions.xml file will be printed to a new file named with the date and time of creation created here: " +
-            "C:/Users/User/AppData/Local/CentroidTechSupportTools/printed.\nIO is printed out in a pattern appropriate for pasting into a spreadsheet.\n" +
+            "C:/Users/User/AppData/Local/CentroidTechSupportTools/IO_printed.\nIO is printed out in a pattern appropriate for pasting into a spreadsheet.\n" +
             "Use the checkbox to indicate different options:\n" +
             "Open file when done - When checked the newly created file will be opened once the process is finished."
         );
@@ -437,6 +457,7 @@ public class App extends Application {
         versionColumn.setPrefWidth(107);
         TableColumn<Directory, String> boardColumn = new TableColumn<>("Board");
         boardColumn.setCellValueFactory(new PropertyValueFactory<>("board"));
+        boardColumn.setPrefWidth(90);
         TableColumn<Directory, String> notesColumn = new TableColumn<>("Notes");
         notesColumn.setCellValueFactory(new PropertyValueFactory<>("notes"));
         TableColumn<Directory, String> dateColumn = new TableColumn<>("Date");
@@ -846,7 +867,7 @@ public class App extends Application {
                 try {
                     if (directory.getBoard().equals("Acorn") && toggleButtonArray.get(0).isSelected()) {
                         continue;
-                    } else if (directory.getBoard().equals("Acornsix") && toggleButtonArray.get(1).isSelected()) {
+                    } else if (directory.getBoard().equals("AcornSix") && toggleButtonArray.get(1).isSelected()) {
                         continue;
                     } else if (directory.getBoard().equals("Hickory") && toggleButtonArray.get(2).isSelected()) {
                         continue;
@@ -899,9 +920,80 @@ public class App extends Application {
                             active = "Yes";
                             deactivateAllMenuItem.setDisable(false);
                         }
+
+                        //get backupreport info
                         String machineType = getMachineType(fileName);
-                        String version = getVersion(fileName);
-                        String board = getBoardType(fileName);
+                        String version = null;
+                        String board = null;
+
+                        String reportName = "";
+                        String reportPath = "";
+                        String versionInfo = "";
+                        File reportBackupFolder = new File(file.toPath() + "/reportbackup");
+                        // File reportBackupFolder = new File("C:/cncm/reportbackup");//testing only
+                        File [] reportBackupList = reportBackupFolder.listFiles();
+                        if (reportBackupList != null) {
+                            reportName = reportBackupList[0].getName().split("\\.")[0];
+                            reportPath = reportBackupList[0].toPath().toString();
+                        }
+                        ZipFile zipFile = new ZipFile(reportPath);
+                        ZipEntry zipEntry = zipFile.getEntry(reportName + ".txt");
+                        if (zipEntry != null && !zipEntry.isDirectory()) {
+                            InputStream is = zipFile.getInputStream(zipEntry);
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+                            String line;
+                            int count = 0;
+                            while ((line = reader.readLine()) != null && count < 10) {
+                                count ++;
+                                if (line.contains("License:")) {
+                                    if (line.toLowerCase().contains("acornsix")) {
+                                        board = "AcornSix";
+                                    } else if (line.toLowerCase().contains("hickory")) {
+                                        board = "Hickory";
+                                    } else if (line.toLowerCase().contains("acorn")) {
+                                        board = "Acorn";
+                                    } else if (line.toLowerCase().contains("oak")) {
+                                        board = "Oak";
+                                    } else if (line.toLowerCase().contains("allinone")) {
+                                        board = "Allin1DC";
+                                    }
+                                } else if (line.equals("Version:")) {
+                                    versionInfo = reader.readLine();
+                                    if (versionInfo.equals("")) {
+                                        versionInfo = reader.readLine();
+                                    }
+                                    if (versionInfo.toLowerCase().contains("acorn")) {
+                                        board = "Acorn";
+                                    }
+                                }  else if (line.contains("Version:")) {
+                                    versionInfo = line;
+                                }
+                            }
+                            if (!versionInfo.equals("")) {
+                                String [] oldVersionSplit = versionInfo.split(" ");
+                                for (int i = 0; i < oldVersionSplit.length; i++) {
+                                    if (oldVersionSplit[i].contains("v") && oldVersionSplit[i].contains(".")) {
+                                        version = oldVersionSplit[i].split("v")[1];
+                                        if (version.contains("-")) {
+                                            version = version.split("-")[0];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        zipFile.close();
+
+                        //if info not found from report get it the old way
+                        if (board == null) {
+                            board = getBoardType(fileName);
+                        }
+                        //some boards can "install on top" which may not reflect in the report
+                        if (version == null || board.toLowerCase().equals("oak") || 
+                        board.toLowerCase().equals("allin1dc") || board.toLowerCase().equals("hickory")) {
+                            version = getVersion(fileName);
+                        }
+
+                        //date and time
                         String rawDate = new Date(new File(file, "system").lastModified()).toString();
                         String[] rawDateSplit = rawDate.split(" ");
                         String newDateString = rawDateSplit[0] + " " + rawDateSplit[1] + " " + rawDateSplit[2] + " " + rawDateSplit[5];
@@ -910,11 +1002,15 @@ public class App extends Application {
                         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         String finalDateString = localDate.format(outputFormatter);
                         String time = rawDateSplit[3];
+                        //machine notes
                         String notes = getMachineNotes(fileName);
+                        //base path ex. cncm, cnct, etc.
                         String basePath = "";
+                        //version
                         String[] rawVersionSplit = version.split("\\.");
                         String rawVersionSplitCombined = rawVersionSplit[0] + rawVersionSplit[1];
                         int versionCombined = Integer.parseInt(rawVersionSplitCombined);
+                        //set base path
                         if (machineType.equals("lathe")) {
                             basePath = "cnct";
                         } else if (versionCombined < 539) {
@@ -928,6 +1024,7 @@ public class App extends Application {
                         } else if (machineType.equals("laser")) {
                             basePath = "cncl";
                         }
+                        //create a new directory object and add it to the directory array
                         directoryArray.add(new Directory(active, capitalizeString(machineType), version, capitalizeString(board), fileName, finalDateString, time, notes, basePath));
                     } 
                 } catch (Exception e) {
@@ -1082,8 +1179,10 @@ public class App extends Application {
             softwareVersion = softwareVersionNodeList.item(0).getTextContent();
             softwareVersionSplit = softwareVersion.split(" ");
         if (softwareVersionSplit[0].equals("ACORN")) {
+            // System.out.println(softwareVersionSplit[3]);
             return softwareVersionSplit[3];
         } else {
+            // System.out.println(softwareVersionSplit[2]);
             return softwareVersionSplit[2];
         }
         } catch (Exception e) {

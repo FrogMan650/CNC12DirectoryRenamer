@@ -90,7 +90,7 @@
     -fx-text-alignment: CENTER;
 }
 
-#printerHBox {
+#printerVBox, #printerHBox {
     -fx-alignment: CENTER;
     -fx-padding: 5;
 }
@@ -101,8 +101,6 @@
     -fx-font-size: 20;
 }
 
-#printButton {
-    -fx-pref-width: 50;
-    -fx-pref-width: 100;
+.button {
     -fx-font-size: 20;
 }
