@@ -1,5 +1,8 @@
 # Centroid Tech Support Tools
 This is a suite of tools to help aid in providing tech support for Centroid.<br><br>
+__v1.4.1 - 8-5-26__
+* Fixed an issue with starting executables
+
 __v1.4 - 7-28-26__
 * Added the "File Printer"
     * Put in a directory path and all files within will be printed to a file

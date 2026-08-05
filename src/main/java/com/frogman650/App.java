@@ -477,16 +477,7 @@ public class App extends Application {
                     if (!selectedDirectory.getActive().equals("Yes")) {
                         activateDirectory(selectedDirectory);
                     }
-                    try {
-                        File executable = new File("C:/" + selectedDirectory.getBasePath(), selectedDirectory.getBasePath() + ".exe");
-                        File executablePath = new File("C:/" + selectedDirectory.getBasePath());
-                        if (executable.exists()) {
-                            Runtime.getRuntime().exec(executable.toString(), null, executablePath);
-                            writeToLogFile("Launching " + selectedDirectory.getBasePath() + ".exe...");
-                        }
-                    } catch (Exception e) {
-                        writeToLogFile("Error starting executable: " + selectedDirectory.getBasePath() + ".exe", e.toString());
-                    }
+                    startExecutable();
                     refreshTableView();
                 }
             });
@@ -713,16 +704,7 @@ public class App extends Application {
         MenuItem openExeMenuItem = new MenuItem("Start Executable");
         openExeMenuItem.setDisable(true);
         openExeMenuItem.setOnAction(event -> {
-            try {
-                File executable = new File("C:/" + selectedDirectory.getPath(), selectedDirectory.getBasePath() + ".exe");
-                File executablePath = new File("C:/" + selectedDirectory.getPath());
-                if (executable.exists()) {
-                    Runtime.getRuntime().exec(executable.toString(), null, executablePath);
-                    writeToLogFile("Launching " + selectedDirectory.getBasePath() + ".exe from " + selectedDirectory.getPath());
-                }
-            } catch (Exception e) {
-                writeToLogFile("Error starting executable: " + selectedDirectory.getPath() + ".exe", e.toString());
-            }
+            startExecutable();
         });
         deactivateAllMenuItem = new MenuItem("Deactivate All");
         deactivateAllMenuItem.setDisable(true);
@@ -735,7 +717,7 @@ public class App extends Application {
                 }
                 refreshTableView();
             } catch (Exception e) {
-                writeToLogFile("Error starting executable: " + selectedDirectory.getPath() + ".exe", e.toString());
+                writeToLogFile("Error deactivating all directories", e.toString());
             }
         });
         MenuItem refreshMenuItem = new MenuItem("Refresh");
@@ -1200,6 +1182,31 @@ public class App extends Application {
             }
         }
         return indentReturn;
+    }
+
+    public static void startExecutable() {
+        String exeString = "";
+        if (selectedDirectory.getMachineType().toLowerCase().equals("mill")) {
+            exeString = "cncm";
+        } else if (selectedDirectory.getMachineType().toLowerCase().equals("lathe")) {
+            exeString = "cnct";
+        } else if (selectedDirectory.getMachineType().toLowerCase().equals("router")) {
+            exeString = "cncr";
+        } else if (selectedDirectory.getMachineType().toLowerCase().equals("plasma")) {
+            exeString = "cncp";
+        } else if (selectedDirectory.getMachineType().toLowerCase().equals("laser")) {
+            exeString = "cncl";
+        }
+        try {
+            File executable = new File("C:/" + selectedDirectory.getPath(), exeString + ".exe");
+            File executablePath = new File("C:/" + selectedDirectory.getPath());
+            if (executable.exists()) {
+                Runtime.getRuntime().exec(executable.toString(), null, executablePath);
+                writeToLogFile("Launching " + exeString + ".exe from " + selectedDirectory.getPath());
+            }
+        } catch (Exception e) {
+            writeToLogFile("Error starting executable: " + exeString + ".exe", e.toString());
+        }
     }
 
     public static void printDirectory(File newPrintedFile, File directoryToPrintFile) {
